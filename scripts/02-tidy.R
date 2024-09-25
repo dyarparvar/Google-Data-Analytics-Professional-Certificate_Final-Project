@@ -1,15 +1,8 @@
-# script2.R - Data Preprocessing
+# Data Preprocessing
 cat("Starting data preprocessing...\n")
 
 # Assuming my_data was loaded in 01-load.R and is available
 # Apply some processing steps (e.g., filtering, cleaning)
-
-
-# To bring it back you use the readRDS function.
-# data_list <- readRDS("rdas/data.rda")
-
-
-
 
 
 # Step 4: Combine data - different collection times but same attributes
@@ -25,16 +18,7 @@ minuteSleep <- rbindlist(data_list[17:18], fill=FALSE)
 minuteSteps <- rbindlist(data_list[19:20], fill=FALSE)
 weightLog <- rbindlist(data_list[21:22], fill=FALSE)
 
-# check the number of columns
-ncol(dailyActivity)
-
-# check the name of columns
-colnames(dailyActivity)
-
-
-
-
-library("skimr")
+# skim data
 skim_without_charts(dailyActivity)
 skim_without_charts(heartrate)
 skim_without_charts(hourlyCalories)
@@ -48,7 +32,68 @@ skim_without_charts(minuteSteps)
 skim_without_charts(weightLog)
 
 
-library(tidyverse)
+str(dailyActivity)
+str(heartrate)
+str(hourlyCalories)
+str(hourlyIntensities)
+str(hourlySteps)
+str(minuteCalories)
+str(minuteIntensities)
+str(minuteMET)
+str(minuteSleep)
+str(minuteSteps)
+str(weightLog)
+
+
+# check for duplicates
+sum(duplicated(dailyActivity))
+sum(duplicated(heartrate))
+sum(duplicated(hourlyCalories))
+sum(duplicated(hourlyIntensities))
+sum(duplicated(hourlySteps))
+sum(duplicated(minuteCalories))
+sum(duplicated(minuteIntensities))
+sum(duplicated(minuteMET))
+sum(duplicated(minuteSleep))
+sum(duplicated(minuteSteps))
+sum(duplicated(weightLog))
+    
+    
+dailyActivity <- dailyActivity %>% 
+  distinct() %>% 
+  drop_na()
+heartrate <- heartrate %>% 
+  distinct() %>% 
+  drop_na()
+hourlyCalories <- hourlyCalories %>% 
+  distinct() %>% 
+  drop_na()
+hourlyIntensities <- hourlyIntensities %>% 
+  distinct() %>% 
+  drop_na()
+hourlySteps <- hourlySteps %>% 
+  distinct() %>% 
+  drop_na()
+minuteCalories <- minuteCalories %>% 
+  distinct() %>% 
+  drop_na()
+minuteIntensities <- minuteIntensities %>% 
+  distinct() %>% 
+  drop_na()
+minuteMET <- minuteMET %>% 
+  distinct() %>% 
+  drop_na()
+minuteSleep <- minuteSleep %>% 
+  distinct() %>% 
+  drop_na()
+minuteSteps <- minuteSteps %>% 
+  distinct() %>% 
+  drop_na()
+weightLog <- weightLog %>% 
+  distinct() %>% 
+  drop_na()
+
+
 
 
 dailyActivity <- dailyActivity %>% 
@@ -60,11 +105,15 @@ dailyActivity <- dailyActivity %>%
 dailyActivity$daily_total <- round(dailyActivity$daily_total,2) 
 
 dailyActivity <- dailyActivity %>% 
-  # filter(daily_total== "100") %>%  # discard the users data that did not use the smart watch the whole time
   filter(Calories != "0") # discard zero calories user data as this represent wrong entry
+  mutate(daily_usage = case_when(
+    daily_total <= quantile(daily_total, 0.25) ~ "Low",
+    daily_total <= quantile(daily_total, 0.5) ~ "Medium",
+    daily_total <= quantile(daily_total, 0.75) ~ "High",
+    TRUE ~ "Very High"
+  ))
 
 
-library(lubridate)
 
 weightLog <- weightLog %>% 
   mutate(Date = parse_date_time(Date, orders = "mdy HMS")) %>% 
@@ -86,115 +135,6 @@ sleep <- minuteSleep %>%
   mutate(Date = parse_date_time(Date, orders = "mdy HMS")) %>% 
   mutate(Time = format(Date, "%H:%M:%S")) %>% 
   mutate(Date = as.Date(Date))
-
-
-results <- data.frame()
-# Loop over each unique date
-for (unique_date in unique(sleep$Date)) {
-  
-  # Filter rows for the current date
-  daily_sleep <- sleep %>% filter(Date == unique_date)
-  
-  # Find min and max time (datetime)
-  start <- min(daily_sleep$Time, na.rm = TRUE)
-  end <- max(daily_sleep$Time, na.rm = TRUE)
-  
-  # Calculate duration
-  # duration <- difftime(end, start, units = "minutes")
-  
-  # Store the result
-  results <- rbind(results, data.frame(
-    Date = unique_date
-  ))
-}
-
-
-
-
-
-
-
-
-
-
-wideSleep <- sleep %>% 
-  filter(value =="1") %>% 
-  pivot_wider(
-    names_from = Date,
-    values_from = Time 
-  ) %>% 
-  format()
-########## duplicates are present! check logId !!!!!!!!
-
-
-sleepStart <- wideSleep %>% 
-  select(-logId, -value) %>% 
-  mutate(across(-Id, ~ sapply(., function(x) min(x, na.rm = TRUE))))
-
-sleepEnd <- wideSleep %>% 
-  select(-logId, -value) %>% 
-  mutate(across(-Id, ~ sapply(., function(x) max(x, na.rm = TRUE))))
-
-
-
-sleepData_1 <- sleepStart %>% 
-  pivot_longer(
-    cols = starts_with("2016"),
-    names_to = "Date",
-    values_to = "start",
-    values_drop_na = TRUE
-  ) %>% 
-  filter(!apply(., 1, function(x) any(is.infinite(x)))) %>% # remove Inf !!!!!!!
-  mutate(dateTime = paste(Date, start, sep = " "))
-
-
-sleepData_2 <- sleepEnd %>% 
-  pivot_longer(
-    cols = starts_with("2016"),
-    names_to = "Date",
-    values_to = "end",
-    values_drop_na = TRUE
-  )
-
-sleepData <- full_join(sleepData_1, sleepData_2, by = c("Id", "Date")) %>% 
-  
-  sleepData <- sleepData %>% 
-  mutate(sleep_duration = format(end, "%H:%M:%S") - format(start, "%H:%M:%S"))
-#check the str of 1, 2 and sleepdata for join correctness
-
-
-
-
-sleepData %>%
-  group_by(Id) %>% 
-  summarise(Date, start = min(Time))
-
-
-
-
-
-
-mutate(sleep_start = min(Time), sleep_end = max(Time)) %>%  
-  
-  
-  
-  
-  
-  
-  group_by(Id, Date) %>%
-  summarise(sleep_duration = sleep_end - sleep_start)
-
-
-mutate(SleepDuration = as.numeric(difftime(Time, lag(Time), units = "mins"))) %>%
-  ungroup()
-
-
-
-group_by(Date) %>% 
-  mutate(sleep_start = min(Time), sleep_end = max(Time)) %>%  
-  group_by(Id) %>% 
-  summarise(sleep_duration = sleep_end - sleep_start)
-
 
 
 

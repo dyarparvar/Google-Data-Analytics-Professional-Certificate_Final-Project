@@ -9,11 +9,7 @@ setwd(data_dir)
 csv_files <- list.files(pattern = "*.csv", full.names = TRUE)
 
 # Step 3: Read all CSV files into a list of data frames
-library(data.table)
 data_list <- lapply(csv_files, fread)
-
-# Saving data object into a file in rdas folder
-# saveRDS(data, file = "rdas/data.rda") 
 
 
 

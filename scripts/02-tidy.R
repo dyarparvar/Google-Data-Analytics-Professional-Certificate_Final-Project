@@ -91,25 +91,11 @@ sleepData <- minuteSleep %>%
   arrange(DateTime) %>% 
   mutate(Start = first(DateTime),  # Get first timestamp for each group
          End = last(DateTime), 
-         Duration = if_else(End >= Start,
+         Duration = if_else(End >= Start),
                             as.numeric(difftime(End, Start, units = "mins")),
                             as.numeric(difftime(End + days(1), Start, units = "mins")))
   )
 
-
-
-sleepMean <- sleepData %>% 
-  mutate(nS = as_hms(Start), nE = as_hms(End)) %>%
-  mutate(nS = as.numeric(nS), nE = as.numeric(nE), nD = as.numeric(Duration)) 
-
-sleepMean <- sleepMean %>%  
-  group_by(Id) %>% 
-  summarise(meanStart = mean(nS), meanEnd = mean(nE)) %>% 
-  summarise(meanDuration = mean(Duration))
-
-mutate(meanStart = seconds_to_period(nS), meanEnd = seconds_to_period(nE)) %>% 
-  
-  
 
 # Steps Data
 stepsData <- hourlySteps %>%
@@ -118,5 +104,16 @@ stepsData <- hourlySteps %>%
   mutate(Time = format(DateTime, "%H:%M:%S")) %>% # It's crucial to take into account the AM/PM format of the initial data and convert it to 24-hour format from the very first step.
   mutate(Date = as.Date(DateTime))
 
+sleepData <- sleepData %>% 
+  mutate(nS = as_hms(Start), nE = as_hms(End)) %>%
+  mutate(nS = as.numeric(nS), nE = as.numeric(nE)) %>%
+  group_by(Id) %>% 
+  mutate(meanStart = mean(nS), meanEnd = mean(nE)) %>% 
+  mutate(meanStart = seconds_to_period(nS), meanEnd = seconds_to_period(nE)) %>% 
+  mutate(nD = nE - nS) %>% 
+  mutate(meanDuration = seconds_to_period(nD))
+
+
+  
 
 cat("Data preprocessing completed!\n")

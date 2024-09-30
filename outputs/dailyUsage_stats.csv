@@ -1,0 +1,7 @@
+"","      Id","  mean_usage","daily_usage","    order"
+"","Min.   :1503960366  ","Min.   : 62.03  ","Length:34         ","Min.   :1.000  "
+"","1st Qu.:2347167796  ","1st Qu.: 68.61  ","Class :character  ","1st Qu.:1.250  "
+"","Median :4558609924  ","Median : 85.46  ","Mode  :character  ","Median :2.500  "
+"","Mean   :4902334687  ","Mean   : 84.08  ",NA,"Mean   :2.559  "
+"","3rd Qu.:6962181067  ","3rd Qu.:100.00  ",NA,"3rd Qu.:4.000  "
+"","Max.   :8877689391  ","Max.   :100.00  ",NA,"Max.   :4.000  "

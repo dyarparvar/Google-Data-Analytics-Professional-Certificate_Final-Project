@@ -51,13 +51,13 @@ minuteSleep <- minuteSleep %>%
 
 activityData <- dailyActivity %>% 
   filter(Calories != "0") %>%  # discard zero calories user data as this represent wrong entry
-  mutate(daily_usage = 100*(VeryActiveMinutes+FairlyActiveMinutes+LightlyActiveMinutes+ SedentaryMinutes)/(24*60)) %>% # sum of the time in various activity modes will show how much the users used their device
-  filter(daily_usage >= 10) %>% 
+  mutate(Usage = 100*(VeryActiveMinutes+FairlyActiveMinutes+LightlyActiveMinutes+ SedentaryMinutes)/(24*60)) %>% # sum of the time in various activity modes will show how much the users used their device
+  filter(Usage >= 10) %>% 
   rename(Date = ActivityDate) %>% 
   mutate(Date = mdy(Date)) 
 
 
-activityData$daily_usage <- round(activityData$daily_usage, 2) 
+activityData$Usage <- round(activityData$Usage, 2) 
 
 
 # Calories Data
@@ -74,7 +74,7 @@ dailyCalories <- caloriesData %>%
 
 activityData <- left_join(activityData, dailyCalories, by = c("Date" = "Date", "Id" = "Id"))
 
-filter_out_Data <- activityData %>% 
+activityData %>% 
   filter(abs(Calories - DailyCalories) >= "100") # see how many rows have calories difference higher than 100 (I'm assuming 100 cal is negligible. 5% margin of error for average 2000cal/day)
 
 activityData <- activityData %>% 
@@ -91,10 +91,11 @@ sleepData <- minuteSleep %>%
   arrange(DateTime) %>% 
   mutate(Start = first(DateTime),  # Get first timestamp for each group
          End = last(DateTime), 
-         Duration = if_else(End >= Start),
+         Duration = if_else(End >= Start,
                             as.numeric(difftime(End, Start, units = "mins")),
                             as.numeric(difftime(End + days(1), Start, units = "mins")))
-  )
+         )
+
 
 
 # Steps Data
@@ -103,16 +104,6 @@ stepsData <- hourlySteps %>%
   mutate(DateTime = parse_date_time(DateTime, orders = "mdy IMS p")) %>%
   mutate(Time = format(DateTime, "%H:%M:%S")) %>% # It's crucial to take into account the AM/PM format of the initial data and convert it to 24-hour format from the very first step.
   mutate(Date = as.Date(DateTime))
-
-sleepData <- sleepData %>% 
-  mutate(nS = as_hms(Start), nE = as_hms(End)) %>%
-  mutate(nS = as.numeric(nS), nE = as.numeric(nE)) %>%
-  group_by(Id) %>% 
-  mutate(meanStart = mean(nS), meanEnd = mean(nE)) %>% 
-  mutate(meanStart = seconds_to_period(nS), meanEnd = seconds_to_period(nE)) %>% 
-  mutate(nD = nE - nS) %>% 
-  mutate(meanDuration = seconds_to_period(nD))
-
 
   
 

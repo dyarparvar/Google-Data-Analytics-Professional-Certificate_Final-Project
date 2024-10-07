@@ -3,7 +3,7 @@ cat("Setting up the environment...\n")
 
 # 1. Load necessary packages (you can modify based on your needs)
 cat("Loading required packages...\n")
-packages <- c("data.table", "skimr", "tidyverse", "lubridate", "dplyr", "ggplot2", "readr", "hms")  # Add packages you need
+packages <- c("data.table", "skimr", "tidyverse", "lubridate", "dplyr", "ggplot2", "readr", "hms", "RColorBrewer")  # Add packages you need
 lapply(packages, require, character.only = TRUE)
 
 # 2. Set project directories

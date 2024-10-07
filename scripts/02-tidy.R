@@ -105,6 +105,7 @@ stepsData <- hourlySteps %>%
   mutate(Time = format(DateTime, "%H:%M:%S")) %>% # It's crucial to take into account the AM/PM format of the initial data and convert it to 24-hour format from the very first step.
   mutate(Date = as.Date(DateTime))
 
-  
+
+
 
 cat("Data preprocessing completed!\n")

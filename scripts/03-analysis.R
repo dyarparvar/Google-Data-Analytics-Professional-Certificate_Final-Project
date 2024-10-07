@@ -71,6 +71,38 @@ dev.off()
 
 
 
+######## Steps & Sleep
+sleepData <- sleepData %>% 
+  mutate(Id = format(Id, scientific = FALSE))
+
+stepsData <- stepsData %>% 
+  mutate(Id = format(Id, scientific = FALSE))
+
+joinData <- left_join(stepsData, sleepData, by = c("DateTime" = "DateTime", "Id" = "Id"))
+
+
+joinData <- joinData %>% 
+  mutate(S = as_hms(Start), E = as_hms(End)) %>%
+  mutate(S = as.numeric(S), E = as.numeric(E)) %>% 
+  mutate(D = Duration) %>% 
+  mutate(Id = format(Id, scientific = FALSE)) %>% 
+  arrange(Id)
+
+
+# to check changes among each individual's sleep behaviour 
+# overall sleep occasions for each user
+
+joinData <- joinData %>% 
+  group_by(logId) %>% 
+  mutate(meanS = mean(S), meanE = mean(E), meanD = mean(D)) %>% 
+  group_by(Id) %>% 
+  summarise(logId = logId, Id = Id, S = S, E = E, D = D, meanStart = mean(meanS), meanEnd = mean(meanE), meanDuration = mean(meanD)) %>% 
+  mutate(meanStart = seconds_to_period(meanStart)) %>% 
+  mutate(meanEnd = seconds_to_period(meanEnd))  %>% 
+  mutate(meanDuration = seconds_to_period(meanDuration*60)) 
+
+
+
 ################### Sleep
 
 # exploratory
@@ -84,17 +116,26 @@ sleepData <- sleepData %>%
   arrange(Id)
 
 
-# to check changes among each individual's behaviour 
+# to check changes among each individual's sleep behaviour 
 # overall sleep occasions for each user
 
-sleepData %>% 
+sleepData <- sleepData %>% 
   group_by(logId) %>% 
   mutate(meanS = mean(S), meanE = mean(E), meanD = mean(D)) %>% 
   group_by(Id) %>% 
-  mutate(meanStart = mean(meanS), meanEnd = mean(meanE), meanDuration = mean(meanD)) %>% 
+  summarise(logId = logId, Id = Id, S = S, E = E, D = D, meanStart = mean(meanS), meanEnd = mean(meanE), meanDuration = mean(meanD)) %>% 
+  distinct() %>% 
+  drop_na() %>% 
   mutate(meanStart = seconds_to_period(meanStart)) %>% 
   mutate(meanEnd = seconds_to_period(meanEnd))  %>% 
-  mutate(meanDuration = seconds_to_period(meanDuration*60))  %>% 
+  mutate(meanDuration = seconds_to_period(meanDuration*60)) 
+  
+ 
+
+sleepData %>% 
+  group_by(Id) %>% 
+  filter(n() >= 30) %>% # select users with at least 30 sleep data points
+  ungroup() %>% 
   ggplot() +
   geom_violin(mapping = aes(x = S, y = Id, color = "Start"), fill = "blue") +
   geom_violin(mapping = aes(x = E, y = Id, color = "End"), fill = "orange") +
@@ -118,20 +159,16 @@ ggsave("all-sleep.png", plot = last_plot(), path = output_dir,
 
 
 sleepData %>% 
-  filter(Duration > 3*60) %>% 
-  group_by(logId) %>% 
-  mutate(meanS = mean(S), meanE = mean(E), meanD = mean(D)) %>% 
+  filter(D > 3*60) %>%
   group_by(Id) %>% 
-  mutate(meanStart = mean(meanS), meanEnd = mean(meanE), meanDuration = mean(meanD)) %>% 
-  mutate(meanStart = seconds_to_period(meanStart)) %>% 
-  mutate(meanEnd = seconds_to_period(meanEnd))  %>% 
-  mutate(meanDuration = seconds_to_period(meanDuration*60))  %>% 
+  filter(n() >= 30) %>% # select users with at least 30 sleep data points
+  ungroup() %>% 
   ggplot() +
   geom_violin(mapping = aes(x = S, y = Id, color = "Start"), fill = "blue") +
   geom_violin(mapping = aes(x = E, y = Id, color = "End"), fill = "orange") +
   geom_point(mapping = aes(x = meanStart, y = Id, color = "Start"), size = 3, shape = 21,  fill = NA) +   # Dots for each point # `group = 1` ensures the line connects the dots  
   geom_point(mapping = aes(x = meanEnd, y = Id, color = "End"), size = 3, shape = 21,  fill = NA) +
-  labs(title = "Long Sleep behaviour of each individual (duration > 3h)", 
+  labs(title = "Long sleep behaviour of each individual (duration > 3h)", 
        x = "time of day", y = "Id") +
   scale_x_time(
     breaks = scales::breaks_width("2 hours"), 
@@ -148,14 +185,10 @@ ggsave("long-sleep.png", plot = last_plot(), path = output_dir,
 
 
 sleepData %>% 
-  filter(Duration <= 3*60) %>% 
-  group_by(logId) %>% 
-  mutate(meanS = mean(S), meanE = mean(E), meanD = mean(D)) %>% 
+  filter(D <= 3*60) %>% 
   group_by(Id) %>% 
-  mutate(meanStart = mean(meanS), meanEnd = mean(meanE), meanDuration = mean(meanD)) %>% 
-  mutate(meanStart = seconds_to_period(meanStart)) %>% 
-  mutate(meanEnd = seconds_to_period(meanEnd))  %>% 
-  mutate(meanDuration = seconds_to_period(meanDuration*60))  %>% 
+  filter(n() >= 30) %>% # select users with at least 30 sleep data points
+  ungroup() %>% 
   ggplot() +
   geom_violin(mapping = aes(x = S, y = Id, color = "Start"), fill = "blue") +
   geom_violin(mapping = aes(x = E, y = Id, color = "End"), fill = "orange") +
@@ -178,13 +211,14 @@ ggsave("nap.png", plot = last_plot(), path = output_dir,
 # each individual sleep occasion for each user
 
 sleepData %>% 
-  filter(Duration > 3*60) %>% 
-  group_by(logId) %>% 
+  filter(D > 3*60) %>% 
   group_by(Id) %>% 
+  filter(n() >= 30) %>% # select users with at least 30 sleep data points
+  ungroup() %>% 
   ggplot() +
   geom_point(mapping = aes(x = S, y = Id, color = "Start"), size = 3, shape = 21,  fill = NA) +   # Dots for each point # `group = 1` ensures the line connects the dots  
   geom_point(mapping = aes(x = E, y = Id, color = "End"), size = 3, shape = 21,  fill = NA) +   # Dots for each point 
-  labs(title = "Long Sleep ", 
+  labs(title = "Long sleep instances for each individual (duration > 3h) ", 
        x = "time of day", y = "Id") +
   scale_x_time(
     breaks = scales::breaks_width("2 hours"), 
@@ -200,13 +234,11 @@ ggsave("long-sleep-points.png", plot = last_plot(), path = output_dir,
        scale = 1, width = 10, height = 6, dpi = 300, limitsize = FALSE)
 
 sleepData %>% 
-  filter(Duration <= 3*60) %>% 
-  group_by(logId) %>% 
-  group_by(Id) %>% 
+  filter(D <= 3*60) %>% 
   ggplot() +
   geom_point(mapping = aes(x = S, y = Id, color = "Start"), size = 3, shape = 21,  fill = NA) +   # Dots for each point # `group = 1` ensures the line connects the dots  
   geom_point(mapping = aes(x = E, y = Id, color = "End"), size = 3, shape = 21,  fill = NA) +   # Dots for each point 
-  labs(title = "Nap Data - sleep duration less than 3 hours", 
+  labs(title = "Nap instances for each individual (duration <= 3h)", 
        x = "time of day", y = "Id") +
   scale_x_time(
     breaks = scales::breaks_width("2 hours"), 
@@ -227,17 +259,8 @@ ggsave("nap-points.png", plot = last_plot(), path = output_dir,
 
 # to check differences among the population
 
-longsleepMean <- sleepData %>%
-  filter(Duration > 3*60) %>% 
-  group_by(logId) %>% 
-  mutate(meanS = mean(S), meanE = mean(E), meanD = mean(D)) %>% 
-  group_by(Id) %>% 
-  mutate(meanStart = mean(meanS), meanEnd = mean(meanE), meanDuration = mean(meanD)) %>% 
-  mutate(meanStart = seconds_to_period(meanStart)) %>% 
-  mutate(meanEnd = seconds_to_period(meanEnd))  %>% 
-  mutate(meanDuration = seconds_to_period(meanDuration*60))
 
-longsleepMean %>% 
+sleepData %>% 
   ggplot() +
   geom_violin(mapping = aes(x = meanStart, y = "" ), fill = "blue") +
   geom_violin(mapping = aes(x = meanEnd, y = ""), fill = "orange") +
@@ -250,25 +273,40 @@ longsleepMean %>%
   theme_minimal()
 
 
+ggsave("sleep-population.png", plot = last_plot(), path = output_dir,
+       scale = 1, width = 6, height = 6, dpi = 300, limitsize = FALSE)
+
+
+sleepData %>%
+  filter(D > 3*60) %>% 
+  group_by(Id) %>%
+  filter(n() >= 30) %>% # select users with at least 30 sleep data points
+  ungroup() %>%
+  ggplot() +
+  geom_violin(mapping = aes(x = meanStart, y = "" ), fill = "blue") +
+  geom_violin(mapping = aes(x = meanEnd, y = ""), fill = "orange") +
+  geom_violin(mapping = aes(x = meanDuration, y = ""), fill = "grey") +
+  labs(title = "long sleep schedule (duration > 3h)", x = "time (hour)", y = "") +
+  scale_x_time(
+    breaks = scales::breaks_width("2 hours"), 
+    labels = scales::time_format("%H")
+  ) +
+  theme_minimal()
+
+
 ggsave("long-sleep-population.png", plot = last_plot(), path = output_dir,
        scale = 1, width = 6, height = 6, dpi = 300, limitsize = FALSE)
 
-napMean <- sleepData %>%
-  filter(Duration <= 3*60) %>% 
-  group_by(logId) %>% 
-  mutate(meanS = mean(S), meanE = mean(E), meanD = mean(D)) %>% 
-  group_by(Id) %>% 
-  mutate(meanStart = mean(meanS), meanEnd = mean(meanE), meanDuration = mean(meanD)) %>% 
-  mutate(meanStart = seconds_to_period(meanStart)) %>% 
-  mutate(meanEnd = seconds_to_period(meanEnd))  %>% 
-  mutate(meanDuration = seconds_to_period(meanDuration*60))
-
-napMean %>% 
+sleepData %>%
+  filter(D <= 3*60) %>% 
+  # group_by(Id) %>%
+  # filter(n() >= 30) %>% # select users with at least 30 sleep data points
+  # ungroup() %>% 
   ggplot() +
   geom_violin(mapping = aes(x = meanEnd, y = ""), fill = "orange") +
   geom_violin(mapping = aes(x = meanDuration, y = ""), fill = "grey") +
   geom_violin(mapping = aes(x = meanStart, y = "" ), fill = "blue") +
-  labs(title = "sleep schedule", x = "time (hour)", y = "") +
+  labs(title = "nap schedule (duration <= 3h)", x = "time (hour)", y = "") +
   scale_x_time(
     breaks = scales::breaks_width("2 hours"), 
     labels = scales::time_format("%H")
@@ -283,6 +321,89 @@ ggsave("nap-population.png", plot = last_plot(), path = output_dir,
 
 # Line connecting Start and End
 # geom_segment(aes(x = meanStart, xend = meanEnd, y = Id, yend = Id), color = "grey", size = 1) +
+
+
+################### Steps
+
+dailystepsData <- stepsData %>% 
+  group_by(Id, Date) %>% 
+  summarise(Id = Id, Date = Date, Steps = sum(StepTotal)) %>% 
+  mutate(Id = format(Id, scientific = FALSE)) %>% 
+  distinct() %>%
+  drop_na() %>% 
+  arrange(Id)
+
+dailystepsData %>% 
+  ggplot() +
+  geom_violin(mapping = aes(x = Steps , y = Id ), fill = "coral") +
+  labs(title = "daily steps", x = "total steps", y = "Id") 
+  
+ggsave("steps-individual.png", plot = last_plot(), path = output_dir,
+       scale = 1, width = 6, height = 10, dpi = 300, limitsize = FALSE)
+
+dailystepsData %>% 
+  ggplot() +
+  geom_violin(mapping = aes(x = Steps , y = "" ), fill = "coral") +
+  labs(title = "daily steps", x = "total steps", y = "Id") 
+
+
+
+hourlystepsData <- stepsData %>% 
+  group_by(Id, Time) %>% 
+  summarise(Id = Id, Time = Time, meanSteps = mean(StepTotal), totalSteps = sum(StepTotal)) %>% 
+  mutate(Id = format(Id, scientific = FALSE)) %>% 
+  mutate(Time = hms::as_hms(Time)) %>% 
+  distinct() %>%
+  drop_na() %>% 
+  arrange(Id)
+
+hourlystepsData %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = Time , y = meanSteps, color = Id), size = 1) +
+  labs(title = "hourly steps", x = "time", y = "mean steps") +
+  facet_wrap(~Id) +
+  scale_x_time(
+    breaks = scales::breaks_width("5 hours"), 
+    labels = scales::time_format("%H")
+  ) +
+  theme_minimal()
+
+ggsave("meansteps-individual-hourly.png", plot = last_plot(), path = output_dir,
+       scale = 1, width = 10, height = 6, dpi = 300, limitsize = FALSE)
+
+hourlystepsData %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = Time , y = totalSteps, color = Id), size = 1) +
+  labs(title = "hourly steps", x = "time", y = "total steps") +
+  facet_wrap(~Id) +
+  scale_x_time(
+    breaks = scales::breaks_width("5 hours"), 
+    labels = scales::time_format("%H")
+  ) +
+  theme_minimal()
+
+ggsave("totalsteps-individual-hourly.png", plot = last_plot(), path = output_dir,
+       scale = 1, width = 10, height = 6, dpi = 300, limitsize = FALSE)
+
+
+hourlystepsData %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = Time , y = meanSteps, color = Id)) +
+  labs(title = "hourly steps", x = "time", y = "mean steps") +
+  scale_x_time(
+    breaks = scales::breaks_width("3 hours"), 
+    labels = scales::time_format("%H")
+  ) +
+  theme_minimal()
+
+ggsave("steps-all-hourly.png", plot = last_plot(), path = output_dir,
+       scale = 1, width = 10, height = 6, dpi = 300, limitsize = FALSE)
+
+
+
+
+
+
 
 
 cat("Exploraatory data analysis completed and results saved!\n")

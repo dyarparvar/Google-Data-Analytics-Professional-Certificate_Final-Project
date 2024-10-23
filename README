@@ -1,11 +1,11 @@
-Project Title: analysing [ ] 
-Data source: data collected by the [ ]
+Project Title: 
+How Bellabeat can play it smart? (Google-Data-Analytics-Professional-Certificate_Capstone-Project)
 
+Data source: 
+“Fitbit Fitness Tracker Data” available on Kaggle under the CC0 license (https://www.kaggle.com/datasets/arashnic/fitbit)
 
 Files:
-download-data.R - Downloads csv file to data directory
-
-wrangle-data.R - Creates a derived dataset and saves as R object in rdas
-directory
-
-analysis.R - A plot is generated and saved in the figs directory.
+main.R: Sets up the environment and runs the other code files.
+load.R: Loads the data from the sources.
+tidy.R: Cleans and prepares the data for analysis.
+analysis.R: Analyses the data and creates visualisations.

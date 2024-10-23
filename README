@@ -5,7 +5,7 @@ Data source:
 “Fitbit Fitness Tracker Data” available on Kaggle under the CC0 license (https://www.kaggle.com/datasets/arashnic/fitbit)
 
 Files:
-main.R: Sets up the environment and runs the other code files.
+main.R: Sets up the environment and runs the other scripts.
 load.R: Loads the data from the sources.
 tidy.R: Cleans and prepares the data for analysis.
 analysis.R: Analyses the data and creates visualisations.

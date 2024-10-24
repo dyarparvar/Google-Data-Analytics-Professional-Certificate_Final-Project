@@ -1,6 +1,40 @@
 Project Title: 
 How Bellabeat can play it smart? (Google-Data-Analytics-Professional-Certificate_Capstone-Project)
 
+
+"Bellabeat"
+Bellabeat is a wellness technology company that creates health-focused products designed to empower women through data-driven insights. Founded in 2013, Bellabeat offers a range of smart devices, including activity trackers, watches, and apps that monitor activity, sleep, stress, and reproductive health. By combining beautiful design with cutting-edge technology, Bellabeat helps women better understand their wellness habits and make informed lifestyle decisions.
+
+Statement of the business task (Ask)
+Bellabeat is looking to expand its market share in the global smart device industry. To achieve this, we need to analyse trends in smart device usage to uncover insights that could drive new marketing strategies. Specifically, our task is to examine how consumers are using non-Bellabeat smart devices (based on the Fitbit dataset) and apply those insights to a Bellabeat product to guide future marketing efforts.
+
+Key questions:
+What are the trends in smart device usage?
+How do these trends apply to Bellabeat customers?
+How can these insights influence Bellabeat's marketing strategy?
+
+Description of all data sources used (Prepare)
+The main dataset used in this analysis is Fitbit Fitness Tracker Data available on Kaggle. This dataset contains fitness data from 30 Fitbit users, including daily activity, heart rate, and sleep monitoring.
+
+Data storage: The dataset was downloaded from Kaggle and stored locally in a folder following proper naming conventions for easy reference.
+
+Organisation: The data is in a long format and contains multiple CSV files with minute-level and daily-level activity data.
+
+Integrity: Basic checks on missing values, duplicates, and formatting issues were conducted to ensure data quality.
+
+Data credibility: While the dataset is publicly available under the CC0 license, the small sample size requires careful analysis, and results should be interpreted with caution.
+
+Data limitations: Since Bellabeat’s products are specifically designed for women, the dataset should ideally focus on female users to provide more relevant insights. However, the lack of gender-specific information, along with the small sample size, may limit its ability to reflect the broader population or specifically the wellness habits of women. For the scope of this project, I used what was available from the Fitbit dataset to tailor strategies that resonate with users of any gender.
+
+Considerations on choosing relevant data:
+I focused on the datasets that had data over two months (common between two folders). Using data that spans at least two months allows for more comprehensive insights into user habits and trends. Shorter time periods might not provide enough data to reveal consistent patterns, and temporary behaviour changes may skew the analysis.
+
+I discarded datasets that had information about less than 30 users. A sample size of at least 30 users ensures that the analysis is statistically significant. Smaller sample sizes can lead to skewed results and may not generalize well to the broader population.
+
+Except for the sleep data, for which no other option is available, I did not use minute-level data. Minute-level data might be too granular for this project's purpose.
+
+
+
 Data source: 
 “Fitbit Fitness Tracker Data” available on Kaggle under the CC0 license (https://www.kaggle.com/datasets/arashnic/fitbit)
 
